@@ -109,12 +109,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           options: { redirectTo: window.location.origin },
         });
         if (error) throw error;
-        // Auth state change listener will update user after redirect
         return;
       } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : 'Erreur de connexion Google.';
-        console.warn('Google OAuth error:', err);
-        setAuthError(msg);
+        const rawMsg = err instanceof Error ? err.message : String(err);
+        console.warn('Google OAuth error:', rawMsg);
+        if (rawMsg.includes('provider is not enabled') || rawMsg.includes('Unsupported provider')) {
+          setAuthError(
+            "Le fournisseur Google n'est pas encore activé dans ton projet Supabase (Authentication > Providers > Google). Utilise l'inscription par Email ci-dessous ou active Google dans Supabase."
+          );
+        } else {
+          setAuthError(rawMsg || 'Erreur de connexion Google.');
+        }
       }
     } else {
       // Demo mode — no Supabase key configured yet
@@ -149,11 +154,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Email ou mot de passe incorrect.';
-      setAuthError(
-        msg.includes('Invalid login') ? 'Email ou mot de passe incorrect.' :
-        msg.includes('Email not confirmed') ? 'Confirme ton email avant de te connecter.' :
-        msg
-      );
+      if (msg.includes('provider is not enabled') || msg.includes('Unsupported provider')) {
+        setAuthError(
+          "Le fournisseur Email n'est pas activé dans ton projet Supabase. Va dans Authentication > Providers > Email et active 'Enable Email provider'."
+        );
+      } else if (msg.includes('Invalid login')) {
+        setAuthError('Email ou mot de passe incorrect.');
+      } else if (msg.includes('Email not confirmed')) {
+        setAuthError('Vérifie tes emails pour confirmer ton adresse avant de te connecter.');
+      } else {
+        setAuthError(msg);
+      }
     } finally {
       setLoading(false);
     }
@@ -177,8 +188,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         },
       });
       if (error) throw error;
-      if (data.user && !data.user.email_confirmed_at) {
-        // Email confirmation pending — show as success message
+
+      if (data.session?.user) {
+        // Auto-confirmed session
+        const u = supabaseUserToProfile(data.session.user);
+        setUser(u);
+        localStorage.setItem(LOCAL_USER_KEY, JSON.stringify(u));
+      } else if (data.user && !data.user.email_confirmed_at) {
+        // Email confirmation required
         setAuthError('✅ Compte créé ! Vérifie ta boîte email pour confirmer ton adresse avant de te connecter.');
       } else if (data.user) {
         const u = supabaseUserToProfile(data.user);
@@ -187,11 +204,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Erreur lors de la création du compte.";
-      setAuthError(
-        msg.includes('already registered') ? 'Un compte existe déjà avec cet email. Connecte-toi.' :
-        msg.includes('Password should be') ? 'Le mot de passe doit comporter au moins 6 caractères.' :
-        msg
-      );
+      if (msg.includes('provider is not enabled') || msg.includes('Unsupported provider')) {
+        setAuthError(
+          "Le fournisseur Email n'est pas activé dans ton projet Supabase. Va dans Authentication > Providers > Email et coche 'Enable Email provider'."
+        );
+      } else if (msg.includes('already registered')) {
+        setAuthError('Un compte existe déjà avec cet email. Connecte-toi.');
+      } else if (msg.includes('Password should be')) {
+        setAuthError('Le mot de passe doit comporter au moins 6 caractères.');
+      } else {
+        setAuthError(msg);
+      }
     } finally {
       setLoading(false);
     }
@@ -238,7 +261,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         /* ignore */
       }
     }
-    // Clear all local data for this user
     const keysToRemove: string[] = [];
     for (let i = 0; i < localStorage.length; i++) {
       const k = localStorage.key(i);
