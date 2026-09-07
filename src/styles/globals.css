@@ -1,0 +1,152 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --violet-imperial: #6600CC;
+  --champagne: #C9A070;
+  --amethyste: #A87FE8;
+  --ardoise: #3A2F5C;
+  --onyx: #0D0A18;
+  --blanc-nacre: #F7F5FB;
+  --negatif: #E8546B;
+  --positif: #4ADE9A;
+  --cyan-aura: #5EC8D8;
+}
+
+@layer base {
+  body {
+    background-color: #0D0A18;
+    color: #F7F5FB;
+    font-family: 'Jost', sans-serif;
+    min-height: 100vh;
+  }
+}
+
+/* Glassmorphism Classes */
+.glass-card {
+  position: relative;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 24px;
+  box-shadow:
+    0 8px 32px rgba(13, 10, 24, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition: all 240ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-card:hover {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(168, 127, 232, 0.35);
+  transform: translateY(-2px);
+}
+
+.glass-card--premium {
+  position: relative;
+  overflow: hidden;
+  background: radial-gradient(120% 120% at 50% 0%, rgba(102, 0, 204, 0.18) 0%, rgba(13, 10, 24, 0.85) 100%);
+  backdrop-filter: blur(40px) saturate(200%);
+  -webkit-backdrop-filter: blur(40px) saturate(200%);
+  border: 1px solid rgba(168, 127, 232, 0.28);
+  border-radius: 32px;
+  box-shadow:
+    0 16px 48px rgba(13, 10, 24, 0.55),
+    0 0 40px rgba(102, 0, 204, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+/* Reflet diagonal animé doux STRICTEMENT sur la Hero Card 100k$ (14s sweep) */
+.glass-sheen::after {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -60%;
+  width: 30%;
+  height: 200%;
+  background: linear-gradient(
+    115deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.06) 45%,
+    rgba(255, 255, 255, 0.12) 50%,
+    rgba(255, 255, 255, 0.06) 55%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: rotate(20deg);
+  animation: sheen-sweep 14s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes sheen-sweep {
+  0%   { left: -60%; }
+  12%  { left: 130%; }
+  100% { left: 130%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glass-sheen::after {
+    display: none !important;
+  }
+}
+
+/* Boutons CTA avec reflet activé uniquement au hover (1.2s) */
+.btn-cta {
+  position: relative;
+  overflow: hidden;
+  transition: all 200ms ease;
+}
+
+.btn-cta::after {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -60%;
+  width: 35%;
+  height: 200%;
+  background: linear-gradient(
+    115deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.18) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: rotate(20deg);
+  transition: opacity 200ms;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.btn-cta:hover::after {
+  opacity: 1;
+  animation: sheen-sweep-fast 1.2s ease-in-out 1;
+}
+
+@keyframes sheen-sweep-fast {
+  0% { left: -60%; }
+  100% { left: 140%; }
+}
+
+/* Tabular Numbers */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0D0A18;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(168, 127, 232, 0.25);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(168, 127, 232, 0.45);
+}
